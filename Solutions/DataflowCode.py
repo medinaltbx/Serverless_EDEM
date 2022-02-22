@@ -55,7 +55,7 @@ class agg_temperature(beam.DoFn):
 
 #Create Beam pipeline
 
-def edemData(output_table):
+def edemData(output_table, project_id):
 
     #Load schema from BigQuery/schemas folder
     with open(f"schemas/{output_table}.json") as file:
@@ -73,7 +73,7 @@ def edemData(output_table):
 
         data = (
             #Read messages from PubSub
-            p | "Read messages from PubSub" >> beam.io.ReadFromPubSub(subscription=f"projects/cobalt-diorama-337709/subscriptions/{output_table}-sub", with_attributes=True)
+            p | "Read messages from PubSub" >> beam.io.ReadFromPubSub(subscription=f"projects/{project_id}/subscriptions/{output_table}-sub", with_attributes=True)
             #Parse JSON messages with Map Function and adding Processing timestamp
               | "Parse JSON messages" >> beam.Map(parse_json_message)
         )
@@ -81,7 +81,7 @@ def edemData(output_table):
         #Part02: Write proccessing message to their appropiate sink
         #Data to Bigquery
         (data | "Write to BigQuery" >> beam.io.WriteToBigQuery(
-            table = f"cobalt-diorama-337709:edemDataset.{output_table}",
+            table = f"{project_id}:edemDataset.{output_table}",
             schema = schema,
             create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND
@@ -95,9 +95,9 @@ def edemData(output_table):
             | "WindowByMinute" >> beam.WindowInto(window.FixedWindows(60))
             | "MeanByWindow" >> beam.CombineGlobally(MeanCombineFn()).without_defaults()
             | "Add Window ProcessingTime" >> beam.ParDo(add_processing_time())
-            | "WriteToPubSub" >> beam.io.WriteToPubSub(topic="projects/cobalt-diorama-337709/topics/iotToCloudFunctions", with_attributes=False)
+            | "WriteToPubSub" >> beam.io.WriteToPubSub(topic=f"projects/{project_id}/topics/iotToCloudFunctions", with_attributes=False)
         )
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
-    edemData("iotToBigQuery")
+    edemData("iotToBigQuery","edemserverless-342118")
