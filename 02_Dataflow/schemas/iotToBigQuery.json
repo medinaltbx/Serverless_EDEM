@@ -2,7 +2,7 @@
     "fields": [
     {
       "mode": "NULLABLE",
-      "name": "parking_id",
+      "name": "device_id",
       "type": "STRING"
     },
     {
@@ -12,8 +12,18 @@
     },
     {
       "mode": "NULLABLE",
-      "name": "ocupado",
-      "type": "BOOLEAN"
+      "name": "processingTime",
+      "type": "STRING"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "temperature",
+      "type": "FLOAT"
+    },
+    {
+      "mode": "NULLABLE",
+      "name": "humidity",
+      "type": "NUMERIC"
     }
     ]
 }
